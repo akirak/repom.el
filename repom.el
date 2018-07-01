@@ -4,7 +4,7 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 1.0-pre
-;; Package-Requires: ((emacs "25.1") (dash "2.10"))
+;; Package-Requires: ((emacs "25.1") (dash "2.10") (projectile "0.14") (f "0.19"))
 ;; Keywords: vc
 ;; URL: https://github.com/akirak/repom.el
 
@@ -27,7 +27,8 @@
 
 ;;; Commentary:
 
-;; 
+;; This module provides basic facilities for repom, a repository manager for
+;; Emacs.
 
 ;;; Code:
 
@@ -74,14 +75,21 @@ This function is called with the project directory as the argument."
 
 ;;;; Operations on a repository
 (defun repom--projectile-with-dir (dir func)
+  "Run a projectile command at a given project directory.
+
+DIR is the root of the project.
+
+FUNC is a symbol which represents a projectile function to be run."
   (let* ((default-directory dir)
          (projectile-cached-project-root dir))
     (funcall func)))
 
 (defun repom-project-find-file (dir)
+  "Run `projectile-find-file' at DIR."
   (repom--projectile-with-dir dir #'projectile-find-file))
 
 (defun repom-project-find-file-other-window (dir)
+  "Run `projectile-find-file-other-window' at DIR."
   (repom--projectile-with-dir dir #'projectile-find-file-other-window))
 
 (defun repom--view-project (&optional dir)
