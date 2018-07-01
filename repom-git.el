@@ -49,7 +49,7 @@
   "Clone a Git repository from a remote url."
   (message "Cloning repository from %s to %s..." url dest)
   (let* ((default-directory (f-parent dest))
-         (sentinel (lambda (proc event)
+         (sentinel (lambda (_proc event)
                      (pcase event
                        ("finished\n" (when action
                                        (funcall action dest)))

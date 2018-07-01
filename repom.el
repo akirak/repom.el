@@ -67,7 +67,7 @@ This function is called with the project directory as the argument."
 
 ;;;; Macros
 (defmacro repom--with-cache-variable (var form)
-  "If VAR is nil, first set it to the result of FORM. Return the value of VAR."
+  "If VAR is nil, first set it to the result of FORM.  Return the value of VAR."
   (declare (indent 1))
   `(if ,var
        ,var

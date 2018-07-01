@@ -75,7 +75,7 @@ This should be a function that takes a URL as the argument."
 ;;;; Operations on a repository
 
 (defun repom-github--browse-repo-code-search (repo &optional query)
-  "Browse a search result page for QUERY in REPO."
+  "Browse a search result page for code in REPO with QUERY."
   (let ((query (or query
                    (read-string (format "Search code in %s: " repo)))))
     (repom-github--browse-url
@@ -83,7 +83,7 @@ This should be a function that takes a URL as the argument."
              repo (repom--escape-query query)))))
 
 (defun repom-github--browse-repo-issues-search (repo &optional query)
-  "Browse a search result page for QUERY in REPO."
+  "Browse a search result page for issues in REPO with QUERY."
   (let ((query (or query
                    (read-string (format "Search issues in %s: " repo)))))
     (repom-github--browse-url
