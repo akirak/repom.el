@@ -37,6 +37,7 @@
 
 (require 'repom)
 (require 'repom-github)
+(require 'repom-git)
 
 (defgroup helm-repom nil
   "Helm interface."
@@ -113,7 +114,7 @@
 
 (defvar helm-repom-github-user-repos-source
   (helm-make-source "GitHub repos owned by the user"
-      helm-repom-github-repos-source-class
+      'helm-repom-github-repos-source-class
     :candidates #'repom-github--list-user-repos
     :candidate-transformer
     (lambda (candidates)
@@ -121,11 +122,12 @@
 
 (defvar helm-repom-github-starred-repos-source
   (helm-make-source "GitHub repos starred by the user"
-      helm-repom-github-repos-source-class
+      'helm-repom-github-repos-source-class
     :candidates #'repom-github--list-starred-repos))
 
 ;;;;; Utilities
 (defun helm-repom--github-repo-candidates (records &rest options)
+  "Format repository candidates from RECORDS with OPTIONS."
   (mapcar (lambda (data)
             (cons (apply #'helm-repom--github-repo-record data options)
                   data))

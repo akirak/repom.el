@@ -4,7 +4,7 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 1.0-pre
-;; Package-Requires: ((emacs "25.1") ghub)
+;; Package-Requires: ((emacs "25.1") (ghub "2.0"))
 ;; Keywords: vc tools
 ;; URL: https://github.com/akirak/repom.el
 
@@ -75,7 +75,7 @@ This should be a function that takes a URL as the argument."
 ;;;; Operations on a repository
 
 (defun repom-github--browse-repo-code-search (repo &optional query)
-  "Browse a search result page for code in a repository."
+  "Browse a search result page for QUERY in REPO."
   (let ((query (or query
                    (read-string (format "Search code in %s: " repo)))))
     (repom-github--browse-url
@@ -83,7 +83,7 @@ This should be a function that takes a URL as the argument."
              repo (repom--escape-query query)))))
 
 (defun repom-github--browse-repo-issues-search (repo &optional query)
-  "Browse a search result page for issues in a repository."
+  "Browse a search result page for QUERY in REPO."
   (let ((query (or query
                    (read-string (format "Search issues in %s: " repo)))))
     (repom-github--browse-url
