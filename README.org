@@ -1,0 +1,45 @@
+* Repository Manager for Emacs (repom.el) [[https://travis-ci.org/akirak/repom.el.svg?branch=master]]
+** Features
+- Helm for local and remote repositories
+  - The list of local repositories are retrieved by projectile
+  - GitHub repositories
+    - User repositories
+    - Starred repositories
+- Various operations on a GitHub repository
+  - Browse the repository page
+  - Clone it for reading
+  - Clone it for editing
+  - Search code in the repository
+  - Search issues in the repository
+** Prerequisites
+- Emacs 25.1
+- dash
+- f
+- projectile
+- ghub
+- helm
+- helm-projectile
+- all-the-icons (optional)
+** Usage
+*** Helm
+=helm-repom= command displays local and remote repositories via Helm.
+*** Operations on a local repository
+The Helm source for local repositories are currently provided by =helm-projectile=.
+*** Operations on a remote repository
+**** Clone the repository for reading
+Helm sources for remote repositories provide an action for reading code in the repository. It does:
+
+1. Clone the repository to a designated destionation (=~/Downloads= by default), unless there is a local repository of the same name. If there is a local repository, skip to step 2.
+
+2. Open the repository using a command configured as =repom-view-project-command=. By default, this is =projectile-find-file-other-window=.
+
+The destination directory can be configured through =repom-clone-destination-for-viewing= variable.
+**** Clone the repository for editing
+Likewise, there is a command for editing. The diffrences from the previous command are as follows:
+
+- The git-clone destination is configured through =repom-clone-destination-for-editing=, and its default value is =~=.
+
+- The action is configured through =repom-edit-project-command=, and its default value is =projectile-switch-project-by-name=. This command runs a function configured as =projectile-switch-project-action=, like =projectile-switch-project= does.
+
+**** More operations
+More actions are available in the Helm sources.
