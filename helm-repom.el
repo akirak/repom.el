@@ -61,21 +61,21 @@
   (featurep 'all-the-icons)
   "Use icons from all-the-icons.el."
   :type 'boolean
-  :group 'repom)
+  :group 'helm-repom)
 
 (defcustom helm-repom-github-fork-indicator
   (when helm-repom-use-all-the-icons
     (concat " " (all-the-icons-octicon "repo-forked")))
   "Indicator to show a forked repository."
   :type 'string
-  :group 'repom)
+  :group 'helm-repom)
 
 (defcustom helm-repom-github-private-indicator
   (when helm-repom-use-all-the-icons
     (concat " " (all-the-icons-octicon "lock")))
   "Indicator to show a forked repository."
   :type 'string
-  :group 'repom)
+  :group 'helm-repom)
 
 ;;;; Faces
 ;; TODO: Add a face for the name of a GitHub repo
@@ -103,7 +103,8 @@
   "Alist of actions on a GitHub repository."
   :type '(alist :key-type string
                 :value-type function)
-  :group 'repom)
+  :group 'helm-repom
+  :group 'repom-github)
 
 ;;;; Sources
 

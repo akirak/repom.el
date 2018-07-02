@@ -41,13 +41,19 @@
   :prefix "repom-"
   :group 'vc)
 
+(defcustom repom-local nil
+  "Configuration for local repositories."
+  :group 'repom)
+
 (defcustom repom-clone-destination-for-viewing "~/Downloads/"
   "Directory for repositories for viewing."
-  :type 'string)
+  :type 'string
+  :group 'repom-local)
 
 (defcustom repom-clone-destination-for-editing "~"
   "Directory for repositories for editing."
-  :type 'string)
+  :type 'string
+  :group 'repom-local)
 
 (defcustom repom-edit-project-command
   #'projectile-switch-project-by-name
@@ -55,7 +61,7 @@
 
 This function is called with the project directory as the argument."
   :type 'function
-  :group 'repom)
+  :group 'repom-local)
 
 (defcustom repom-view-project-command
   #'repom-project-find-file-other-window
@@ -63,7 +69,7 @@ This function is called with the project directory as the argument."
 
 This function is called with the project directory as the argument."
   :type 'function
-  :group 'repom)
+  :group 'repom-local)
 
 ;;;; Macros
 (defmacro repom--with-cache-variable (var form)
