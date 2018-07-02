@@ -56,6 +56,14 @@ This should be a function that takes a URL as the argument."
   :type '(choice function (const "Default" nil))
   :group 'repom-github)
 
+(defcustom repom-github-user-repos-sort 'updated
+  "How to sort the user repositories."
+  :type '(choice (const created)
+                 (const updated)
+                 (const pushed)
+                 (const full_name))
+  :group 'repom-github)
+
 ;;;;; Other variables
 (defvar repom-github-token-scopes nil
   "Needed to get a list of GitHub repos.")
@@ -96,7 +104,8 @@ This should be a function that takes a URL as the argument."
   "Return a list of user repositories."
   (repom--with-cache-variable repom-github-user-repos-cache
     (ghub-request "GET" "/user/repos"
-                  '((visibility . "all"))
+                  `((visibility . "all")
+                    (sort . ,(symbol-name repom-github-user-repos-sort)))
                   :unpaginate t
                   :auth 'repom)))
 
