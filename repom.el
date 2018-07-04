@@ -35,11 +35,16 @@
 (require 'dash)
 (require 'projectile)
 (require 'f)
+(require 'generator)
 
 (defgroup repom nil
   "Manage local and remote repositories."
   :prefix "repom-"
   :group 'vc)
+
+(defconst repom-git-dir
+  ;; TODO: Add support for Windows (maybe you can use `system-type' for check)
+  ".git")
 
 (defcustom repom-local nil
   "Configuration for local repositories."
@@ -53,6 +58,13 @@
 (defcustom repom-clone-destination-for-editing "~"
   "Directory for repositories for editing."
   :type 'string
+  :group 'repom-local)
+
+(defcustom repom-local-discovery-locations nil
+  "List of extra local repository locations."
+  :type '(repeat (list (string :tag "Directory")
+                       (integer :tag "Level")
+                       (plist :tag "Options" :inline t)))
   :group 'repom-local)
 
 (defcustom repom-edit-project-command
@@ -116,6 +128,70 @@ If DIR is set, the function is caled with `default-directory` set to it.
 Otherwise, `default-directory' should be set to the root of the project
 directory"
   (funcall repom-edit-project-command (or dir default-directory)))
+
+;;;; Discover local repositories
+(defun repom--local-discovery-locations ()
+  "Return a list of local discovery locations, including clone destinations."
+  (append repom-local-discovery-locations
+          ;; FIXME: Avoid duplicates
+          `((,repom-clone-destination-for-viewing 1)
+            (,repom-clone-destination-for-editing 1))))
+
+(iter-defun repom--yield-projectile-projects ()
+  "Generates known projectile projects in canonical paths."
+  (dolist (item (cl-remove-duplicates
+                 ;; Append slash for detecting duplicates
+                 (mapcar #'f-slash (mapcar #'f-canonical
+                                           projectile-known-projects))
+                 :test #'string-equal))
+    (when (f-directory-p item)
+      (iter-yield item))))
+
+(iter-defun repom--yield-directories-at-level (root level)
+  "Generates directories inside ROOT at LEVEL."
+  (if (= level 0)
+      (when (f-directory-p root)
+        (iter-yield (f-slash root)))
+    (dolist (subdir (f-directories root))
+      (if (= level 1)
+          (iter-yield (f-slash subdir))
+        (iter-yield-from (repom--yield-directories-at-level subdir
+                                                            (1- level)))))))
+
+(iter-defun repom--yield-directories ()
+  "Generates local Git repositories."
+  (let (sent)
+    (iter-do (dir (repom--yield-projectile-projects))
+      (push dir sent)
+      (iter-yield dir))
+    (cl-loop for (root level . _) in (repom--local-discovery-locations)
+             do (iter-do (dir (repom--yield-directories-at-level (f-canonical root)
+                                                                 level))
+                  (unless (not (member root sent))
+                    (iter-yield dir))))))
+
+(iter-defun repom--yield-git-work-trees ()
+  "Generates local Git repositories (working trees)."
+  (iter-do (dir (repom--yield-directories))
+    (when (f-directory-p (f-join dir repom-git-dir))
+      (iter-yield dir))))
+
+;;;###autoload
+(defun repom-discover-local-git-repos ()
+  "Discover local Git repositories.
+
+This function discovers local Git repositories according to
+`repom-local-discovery-locations' (which is similar to
+`magit-repository-directories' in magit) as well as
+`projectile-known-directories'.
+
+The result is a list of directories. Each item in the result is a canonicalized
+path (i.e. symlink-resolved) and has a trailing path. The result does not
+contain duplicates."
+  (let (result)
+    (iter-do (dir (repom--yield-git-work-trees))
+      (push dir result))
+    result))
 
 ;;;; Utilities
 (defsubst repom--escape-query (&rest query)
