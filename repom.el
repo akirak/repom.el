@@ -185,8 +185,8 @@ This function discovers local Git repositories according to
 `magit-repository-directories' in magit) as well as
 `projectile-known-directories'.
 
-The result is a list of directories. Each item in the result is a canonicalized
-path (i.e. symlink-resolved) and has a trailing path. The result does not
+The result is a list of directories.  Each item in the result is a canonicalized
+path (i.e. symlink-resolved) and has a trailing path.  The result does not
 contain duplicates."
   (let (result)
     (iter-do (dir (repom--yield-git-work-trees))
