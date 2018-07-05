@@ -1,4 +1,5 @@
 * Repository Manager for Emacs (repom.el) [[https://travis-ci.org/akirak/repom.el.svg?branch=master]]
+Repom.el lets you quickly access both local and remote (GitHub) repositories.
 ** Features
 - Helm for local and remote repositories
   - The list of local repositories are retrieved by projectile
@@ -44,3 +45,5 @@ Likewise, there is a command for editing. The diffrences from the previous comma
 
 **** More operations
 More actions are available in the Helm sources.
+** Also see
+To browse issues in the current local repository, [[https://github.com/vermiculus/magithub][Magithub]] nicely integrates GitHub into Magit.
