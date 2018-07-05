@@ -34,6 +34,7 @@
 
 (require 'repom)
 (require 'f)
+(require 'magit)
 
 (defgroup repom-git nil
   "Git"
@@ -75,6 +76,72 @@
     (repom-git--clone-internal url
                                (repom--default-edit-location name)
                                #'repom--edit-project)))
+
+;;;; Repository statuses
+(cl-defun repom-git-statuses (fields &optional repos no-save)
+  "Get statuses of local Git repositories.
+
+FIELDS is a list of symbols to specify which types of check to run.
+
+`dirty'
+
+Optionally, FIELDS can be a single symbol, which is converted to
+a list containing the symbol.
+
+Optional REPOS is a list of repositories to run checks. If it is nil,
+then all repositories retrieved using `repom-discover-local-git-repos'
+are checked.
+
+By default, this function save modified buffers using
+`save-some-buffers' before checking the statuses.
+However, if NO-SAVE is non-nil, buffers are not saved.
+
+The result is a list whose item takes a form of \"(REPO . STATUS)\".
+REPO is the directory path, and STATUS is a list whose item takes
+a form \"(FIELD . VALUE)\".  If a field contains no issue, the field
+is not included in the result.  If a repository has no issue,
+the repository is not included in the result."
+  (unless no-save
+    (save-some-buffers))
+  (let ((repos (or repos (repom-discover-local-git-repos)))
+        (fields (if (symbolp fields)
+                    (list fields)
+                  fields))
+        result)
+    (dolist (repo repos)
+      (when-let ((status (repom-git--status fields repo)))
+        (push (cons repo status) result)))
+    (nreverse result)))
+
+(defun repom-git--status (fields repo)
+  "Check FIELDS of REPO."
+  (let (result
+        (file-statuses
+         (when (memq 'modified fields)
+           (repom-git--git-lines repo "status" "--porcelain"))))
+    (dolist (field fields)
+      (when-let
+          ((value
+            (cl-ecase field
+              (modified (when-let
+                            ((result (cl-remove-if-not
+                                      (lambda (s)
+                                        (string-match "^\\(M.\\|.M\\)" s))
+                                      file-statuses)))
+                          (length result))))))
+        (push (cons field value) result)))
+    (nreverse result)))
+
+;;;; Git utilities
+(defun repom-git--git-string (repo &rest args)
+  "With REPO, run git with ARGS and return its output as a string."
+  (let ((default-directory repo))
+    (apply #'magit-git-string args)))
+
+(defun repom-git--git-lines (repo &rest args)
+  "With REPO, run git with ARGS and return its output as strings."
+  (let ((default-directory repo))
+    (apply #'magit-git-lines args)))
 
 (provide 'repom-git)
 ;;; repom-git.el ends here
