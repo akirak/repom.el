@@ -42,13 +42,13 @@
   :prefix "repom-"
   :group 'vc)
 
+(defgroup repom-local nil
+  "Configuration for local repositories."
+  :group 'repom)
+
 (defconst repom-git-dir
   ;; TODO: Add support for Windows (maybe you can use `system-type' for check)
   ".git")
-
-(defcustom repom-local nil
-  "Configuration for local repositories."
-  :group 'repom)
 
 (defcustom repom-clone-destination-for-viewing "~/Downloads/"
   "Directory for repositories for viewing."
