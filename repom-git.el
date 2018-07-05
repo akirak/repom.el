@@ -4,7 +4,7 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 1.0-pre
-;; Package-Requires: ((emacs "25.1") (f "0.19"))
+;; Package-Requires: ((emacs "25.1") (f "0.19") (magit "2.12"))
 ;; Keywords: vc
 ;; URL: https://github.com/akirak/repom.el
 
