@@ -85,11 +85,10 @@ FIELDS is a list of symbols to specify which types of check to run.
 The following values are allowed:
 
 dirty
-  Any dirty states by \"git status --porcelain\" command
-  (in the worktree or the index or both)
-modified
   Any dirty states by \"git status --porcelain\" command, except for
   untracked files.
+untracked
+  untracked files in the repository.
 
 Optionally, FIELDS can be a single symbol, which is converted to
 a list containing the symbol.
@@ -122,13 +121,13 @@ the repository is not included in the result."
 (defun repom-git--status (fields repo)
   "Check FIELDS of REPO."
   (let ((statuses
-         (when (intersection fields '(dirty modified))
+         (when (intersection fields '(dirty untracked))
            (repom-git--git-lines repo "status" "--porcelain"))))
     (cl-loop for field in fields
              for r = (cl-ecase field
                        (dirty
                         (repom-git--count-status-lines field statuses))
-                       (modified
+                       (untracked
                         (repom-git--count-status-lines field statuses)))
              when r
              collect (cons field r))))
@@ -139,8 +138,8 @@ the repository is not included in the result."
       ((result (cl-remove-if-not
                 (lambda (s)
                   (cl-ecase type
-                    (modified (not (string-prefix-p "??" s)))
-                    (dirty t)))
+                    (dirty (not (string-prefix-p "??" s)))
+                    (untracked (string-prefix-p "??" s))))
                 lines)))
     (length result)))
 
