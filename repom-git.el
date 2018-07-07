@@ -82,8 +82,14 @@
   "Get statuses of local Git repositories.
 
 FIELDS is a list of symbols to specify which types of check to run.
+The following values are allowed:
 
-`dirty'
+dirty
+  Any dirty states by \"git status --porcelain\" command
+  (in the worktree or the index or both)
+modified
+  Any dirty states by \"git status --porcelain\" command, except for
+  untracked files.
 
 Optionally, FIELDS can be a single symbol, which is converted to
 a list containing the symbol.
@@ -115,22 +121,28 @@ the repository is not included in the result."
 
 (defun repom-git--status (fields repo)
   "Check FIELDS of REPO."
-  (let (result
-        (file-statuses
-         (when (memq 'modified fields)
+  (let ((statuses
+         (when (intersection fields '(dirty modified))
            (repom-git--git-lines repo "status" "--porcelain"))))
-    (dolist (field fields)
-      (when-let
-          ((value
-            (cl-ecase field
-              (modified (when-let
-                            ((result (cl-remove-if-not
-                                      (lambda (s)
-                                        (string-match "^\\(M.\\|.M\\)" s))
-                                      file-statuses)))
-                          (length result))))))
-        (push (cons field value) result)))
-    (nreverse result)))
+    (cl-loop for field in fields
+             for r = (cl-ecase field
+                       (dirty
+                        (repom-git--count-status-lines field statuses))
+                       (modified
+                        (repom-git--count-status-lines field statuses)))
+             when r
+             collect (cons field r))))
+
+(defun repom-git--count-status-lines (type lines)
+  "Count the number of files in a TYPE state in LINES."
+  (when-let
+      ((result (cl-remove-if-not
+                (lambda (s)
+                  (cl-ecase type
+                    (modified (not (string-prefix-p "??" s)))
+                    (dirty t)))
+                lines)))
+    (length result)))
 
 ;;;; Git utilities
 (defun repom-git--git-string (repo &rest args)
