@@ -62,6 +62,7 @@
          (proc (start-file-process "repom-git-clone" nil "git" "clone" url dest)))
     (set-process-sentinel proc sentinel)))
 
+;;;###autoload
 (cl-defun repom-git-clone-for-viewing (url name)
   "Clone a Git repository from URL and edit it.  Use NAME as the destination."
   (if-let ((existing-dest (repom--find-local-repo-of-name name)))
@@ -70,6 +71,7 @@
                                (repom--default-view-location name)
                                #'repom--view-project)))
 
+;;;###autoload
 (cl-defun repom-git-clone-for-editing (url name)
   "Clone a Git repository from URL and edit it.  Use NAME as the destination."
   (if-let ((existing-dest (repom--find-local-repo-of-name name)))
@@ -79,6 +81,8 @@
                                #'repom--edit-project)))
 
 ;;;; Repository statuses
+
+;;;###autoload
 (cl-defun repom-git-statuses (fields &optional repos no-save)
   "Get statuses of local Git repositories.
 
