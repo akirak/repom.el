@@ -4,7 +4,7 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 1.0-pre
-;; Package-Requires: ((emacs "25.1") (f "0.19") (magit "2.12"))
+;; Package-Requires: ((emacs "25.1") (f "0.19") (magit "2.12") (dash "2.10"))
 ;; Keywords: vc
 ;; URL: https://github.com/akirak/repom.el
 
@@ -35,6 +35,7 @@
 (require 'repom)
 (require 'f)
 (require 'magit)
+(require 'dash)
 
 (defgroup repom-git nil
   "Git"
@@ -121,7 +122,7 @@ the repository is not included in the result."
 (defun repom-git--status (fields repo)
   "Check FIELDS of REPO."
   (let ((statuses
-         (when (intersection fields '(dirty untracked))
+         (when (-intersection fields '(dirty untracked))
            (repom-git--git-lines repo "status" "--porcelain"))))
     (cl-loop for field in fields
              for r = (cl-ecase field
