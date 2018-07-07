@@ -27,6 +27,10 @@ Repom.el lets you quickly access both local and remote (GitHub) repositories.
 =helm-repom= command displays local and remote repositories via Helm.
 *** Operations on a local repository
 The Helm source for local repositories are currently provided by =helm-projectile=.
+**** Discover Git repositories
+You can discover Git repositories in designated locations. To configure directories that may contain Git repositories, customize =repom-local-discovery-locations= variable.
+
+Once you configure locations for local Git repositories, you can get a list of Git repositories using =repom-discover-local-git-repos= function. You can also check repository statuses using =repom-git-statuses= function in =repom-git.el=.
 *** Operations on a remote repository
 **** Clone the repository for reading
 Helm sources for remote repositories provide an action for reading code in the repository. It does:
