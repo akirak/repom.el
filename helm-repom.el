@@ -109,7 +109,9 @@
    "Dwim (search repos/code)"
    #'helm-repom-dummy-dwim-action
    "Search GitHub repositories"
-   #'helm-repom-search-github-repos)
+   #'helm-repom-search-github-repos
+   "Search GitHub code"
+   #'helm-repom-search-github-code)
   "Alist of actions on the Helm dummy source."
   :group 'helm-repom)
 
@@ -131,6 +133,14 @@
                       (if .incomplete_results "complete" "incomplete"))
               'helm-repom-github-repos-source-class
             :candidates .items))))
+
+(defun helm-repom-search-github-code (query)
+  "Search code in GitHub from QUERY."
+  ;; TODO: Implement a Helm interface
+  (interactive "MCode in GitHub: ")
+  (repom-github--browse-url
+   (format "https://github.com/search?q=%s&type=Code"
+           (repom--escape-query query))))
 
 ;;;; Sources
 
