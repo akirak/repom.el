@@ -84,8 +84,10 @@
 (defcustom helm-repom-github-repo-actions
   (helm-make-actions
    "Browse the web page"
-   (pcase-lambda ((map html_url))
-     (repom-github--browse-url html_url))
+   (lambda (_cand)
+     (mapc (pcase-lambda ((map html_url))
+             (repom-github--browse-url html_url))
+           (helm-marked-candidates)))
    "Edit locally"
    (pcase-lambda ((map clone_url name))
      (repom-git-clone-for-editing clone_url name))
