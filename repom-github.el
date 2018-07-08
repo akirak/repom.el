@@ -117,6 +117,8 @@ This should be a function that takes a URL as the argument."
                   :auth 'repom)))
 
 (defun repom-github--search-repos (query)
+  "Search repositories matching QUERY."
+  ;; TODO: Allow specify the sorting method
   (ghub-request "GET" "/search/repositories"
                 `((q . ,query))
                 :auth 'repom))

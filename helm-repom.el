@@ -120,6 +120,7 @@
 
 (defun helm-repom-search-github-repos (query)
   "Search GitHub repositories from QUERY."
+  ;; TODO: Use magit-popup to configure the search
   (interactive "MGitHub repositories: ")
   (let-alist (repom-github--search-repos query)
     (helm :sources
