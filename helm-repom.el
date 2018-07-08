@@ -49,9 +49,7 @@
   '(helm-source-projectile-projects
     helm-repom-github-user-repos-source
     helm-repom-github-starred-repos-source
-    ;; TODO: Add dummy source
-    ;; helm-repom-git-source-dummy-url
-    )
+    helm-repom-dummy-source)
   "List of sources for `helm-repom'."
   :type '(repeat symbol)
   :group 'helm-repom)
@@ -106,6 +104,33 @@
   :group 'helm-repom
   :group 'repom-github)
 
+(defcustom helm-repom-dummy-source-actions
+  (helm-make-actions
+   "Dwim (search repos/code)"
+   #'helm-repom-dummy-dwim-action
+   "Search GitHub repositories"
+   #'helm-repom-search-github-repos)
+  "Alist of actions on the Helm dummy source."
+  :group 'helm-repom)
+
+(defun helm-repom-dummy-dwim-action (query)
+  "Run an action depending on QUERY."
+  ;; TODO: Add more actions
+  (helm-repom-search-github-repos query))
+
+(defun helm-repom-search-github-repos (query)
+  "Search GitHub repositories from QUERY."
+  (interactive "MGitHub repositories: ")
+  (let-alist (repom-github--search-repos query)
+    (helm :sources
+          (helm-make-source
+              (format "Repositories matching \"%s\" (Total %d, %s)"
+                      query
+                      .total_count
+                      (if .incomplete_results "complete" "incomplete"))
+              'helm-repom-github-repos-source-class
+            :candidates .items))))
+
 ;;;; Sources
 
 ;;;;; GitHub repos
@@ -125,6 +150,11 @@
   (helm-make-source "GitHub repos starred by the user"
       'helm-repom-github-repos-source-class
     :candidates #'repom-github--list-starred-repos))
+
+;;;; Dummy source
+(defvar helm-repom-dummy-source
+  (helm-make-source "Query" 'helm-source-dummy
+    :action 'helm-repom-dummy-source-actions))
 
 ;;;;; Utilities
 (defun helm-repom--github-repo-candidates (records &rest options)

@@ -116,6 +116,11 @@ This should be a function that takes a URL as the argument."
                   :unpaginate t
                   :auth 'repom)))
 
+(defun repom-github--search-repos (query)
+  (ghub-request "GET" "/search/repositories"
+                `((q . ,query))
+                :auth 'repom))
+
 ;;;; Maintenance
 (defun repom-github-clear-cache ()
   "Clear the cache."
