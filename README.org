@@ -6,6 +6,8 @@ Repom.el lets you quickly access both local and remote (GitHub) repositories.
   - GitHub repositories
     - User repositories
     - Starred repositories
+  - Search GitHub repositories
+  - Search code in GitHub (currently just open the web site)
 - Various operations on a GitHub repository
   - Browse the repository page
   - Clone it for reading
@@ -24,7 +26,7 @@ Repom.el lets you quickly access both local and remote (GitHub) repositories.
 - all-the-icons (optional)
 ** Usage
 *** Helm
-=helm-repom= command displays local and remote repositories via Helm.
+=helm-repom= command displays local and remote repositories via Helm. It also allows you to search repositories/code on GitHub.
 *** Operations on a local repository
 The Helm source for local repositories are currently provided by =helm-projectile=.
 **** Discover Git repositories
