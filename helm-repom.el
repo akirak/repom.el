@@ -115,6 +115,8 @@
    "Search GitHub code"
    #'helm-repom-search-github-code)
   "Alist of actions on the Helm dummy source."
+  :type '(alist :key-type string
+                :value-type function)
   :group 'helm-repom)
 
 (defun helm-repom-dummy-dwim-action (query)
