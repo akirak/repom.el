@@ -130,13 +130,17 @@
   (interactive "MGitHub repositories: ")
   (let-alist (repom-github--search-repos query)
     (helm :sources
-          (helm-make-source
-              (format "Repositories matching \"%s\" (Total %d, %s)"
-                      query
-                      .total_count
-                      (if .incomplete_results "complete" "incomplete"))
-              'helm-repom-github-repos-source-class
-            :candidates .items))))
+          (list (helm-make-source
+                    (format "Repositories matching \"%s\" (Total %d, %s)"
+                            query
+                            .total_count
+                            (if .incomplete_results "complete" "incomplete"))
+                    'helm-repom-github-repos-source-class
+                  :candidates .items)
+                (helm-build-dummy-source "Try a different query"
+                  :action
+                  '(("Search repositories"
+                     . helm-repom-search-github-repos)))))))
 
 (defun helm-repom-search-github-code (query)
   "Search code in GitHub from QUERY."
