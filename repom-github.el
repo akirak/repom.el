@@ -100,18 +100,24 @@ This should be a function that takes a URL as the argument."
 
 ;;;; Retrieve information from the server
 
-(defun repom-github--list-user-repos ()
-  "Return a list of user repositories."
+(defun repom-github--list-user-repos (&optional update)
+  "Return a list of user repositories.
+
+If UPDATE is non-nil, first clear the cache."
   (repom--with-cache-variable repom-github-user-repos-cache
+    update
     (ghub-request "GET" "/user/repos"
                   `((visibility . "all")
                     (sort . ,(symbol-name repom-github-user-repos-sort)))
                   :unpaginate t
                   :auth 'repom)))
 
-(defun repom-github--list-starred-repos ()
-  "Return a list of repositories starred by the user."
+(defun repom-github--list-starred-repos (&optional update)
+  "Return a list of repositories starred by the user.
+
+If UPDATE is non-nil, first clear the cache."
   (repom--with-cache-variable repom-github-starred-repos-cache
+    update
     (ghub-request "GET" "/user/starred" nil
                   :unpaginate t
                   :auth 'repom)))
@@ -134,9 +140,8 @@ This should be a function that takes a URL as the argument."
 ;;;###autoload
 (defun repom-github-fetch-repo-lists ()
   "Fetch lists of GitHub repositories and store them in the memory."
-  (repom-github-clear-cache)
-  (repom-github--list-user-repos)
-  (repom-github--list-starred-repos))
+  (repom-github--list-user-repos t)
+  (repom-github--list-starred-repos t))
 
 (provide 'repom-github)
 ;;; repom-github.el ends here

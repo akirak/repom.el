@@ -84,12 +84,16 @@ This function is called with the project directory as the argument."
   :group 'repom-local)
 
 ;;;; Macros
-(defmacro repom--with-cache-variable (var form)
-  "If VAR is nil, first set it to the result of FORM.  Return the value of VAR."
+(defmacro repom--with-cache-variable (var &optional force-update
+                                          &rest form)
+  "Retrieve a value and store the result into a variable.
+
+If both VAR and FORCE-UPDATE is nil, first set it to the result of FORM.
+Return the value of VAR."
   (declare (indent 1))
-  `(if ,var
+  `(if (and ,var (not ,force-update))
        ,var
-     (setq ,var ,form)))
+     (setq ,var (progn ,@form))))
 
 ;;;; Operations on a repository
 (defun repom--projectile-with-dir (dir func)
