@@ -48,7 +48,8 @@
 
 (defconst repom-git-dir
   ;; TODO: Add support for Windows (maybe you can use `system-type' for check)
-  ".git")
+  ".git"
+  "The file name of Git repositories on the platform.")
 
 (defcustom repom-clone-destination-for-viewing "~/Downloads/"
   "Directory for repositories for viewing."
