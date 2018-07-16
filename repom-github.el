@@ -130,5 +130,12 @@ This should be a function that takes a URL as the argument."
   (setq repom-github-user-repos-cache nil
         repom-github-starred-repos-cache nil))
 
+;;;###autoload
+(defun repom-github-fetch-repo-lists ()
+  "Fetch lists of GitHub repositories and store them in the memory."
+  (repom-github-clear-cache)
+  (repom-github--list-user-repos)
+  (repom-github--list-starred-repos))
+
 (provide 'repom-github)
 ;;; repom-github.el ends here
