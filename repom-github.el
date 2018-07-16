@@ -124,6 +124,7 @@ This should be a function that takes a URL as the argument."
                 :auth 'repom))
 
 ;;;; Maintenance
+;;;###autoload
 (defun repom-github-clear-cache ()
   "Clear the cache."
   (interactive)
