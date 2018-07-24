@@ -113,7 +113,9 @@
    "Search GitHub repositories"
    #'helm-repom-search-github-repos
    "Search GitHub code"
-   #'helm-repom-search-github-code)
+   #'helm-repom-search-github-code
+   "Search MELPA"
+   #'helm-repom-search-melpa)
   "Alist of actions on the Helm dummy source."
   :type '(alist :key-type string
                 :value-type function)
@@ -148,6 +150,12 @@
   (interactive "MCode in GitHub: ")
   (repom-github--browse-url
    (format "https://github.com/search?q=%s&type=Code"
+           (repom--escape-query query))))
+
+(defun helm-repom-search-melpa (query)
+  (interactive "MSearch in MELPA: ")
+  (repom-github--browse-url
+   (format "https://melpa.org/#/?q=%s"
            (repom--escape-query query))))
 
 ;;;; Sources
