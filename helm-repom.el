@@ -153,6 +153,7 @@
            (repom--escape-query query))))
 
 (defun helm-repom-search-melpa (query)
+  "Search an Emacs Lisp package matching QUERY in MELPA."
   (interactive "MSearch in MELPA: ")
   (repom-github--browse-url
    (format "https://melpa.org/#/?q=%s"
