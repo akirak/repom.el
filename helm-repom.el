@@ -75,6 +75,16 @@
   :type 'string
   :group 'helm-repom)
 
+(defcustom helm-repom-description-max-length 120
+  "Truncate repository descriptions at a particular length.
+
+Some repository descriptions on GitHub are so long that they span
+across multiple lines.  If this variable is a number, descriptions
+are truncated at the length.  If this value is nil, descriptions
+are not truncated."
+  :type '(or integer (const nil))
+  :group 'helm-repom)
+
 ;;;; Faces
 ;; TODO: Add a face for the name of a GitHub repo
 ;; TODO: Add a face for the name of a local repo
@@ -202,7 +212,11 @@
                     (and .private helm-repom-github-private-indicator)
                     (and .fork helm-repom-github-fork-indicator))
             (or .language "")
-            (or .description "")
+            (let ((description (or .description ""))
+                  (max-length helm-repom-description-max-length))
+              (if (and max-length (> (length description) max-length))
+                  (substring description 0 max-length)
+                description))
             (if-let ((fields (cl-delete nil
                                         (list
                                          (when .private "private")
