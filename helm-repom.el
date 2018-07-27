@@ -141,8 +141,9 @@
                   :candidates .items)
                 (helm-build-dummy-source "Try a different query"
                   :action
-                  '(("Search repositories"
-                     . helm-repom-search-github-repos)))))))
+                  (cons '("Search repositories"
+                          . helm-repom-search-github-repos)
+                        helm-repom-dummy-source-actions))))))
 
 (defun helm-repom-search-github-code (query)
   "Search code in GitHub from QUERY."
