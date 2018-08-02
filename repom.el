@@ -199,6 +199,14 @@ contain duplicates."
     result))
 
 ;;;; Utilities
+(defmacro repom--def-object-api (name args doc &rest body)
+  "Define a function to operate on an JSON object (or alist)."
+  (declare (indent 2))
+  (let ((name (concat "repom--api-" (symbol-name name))))
+    `(defalias (quote ,(intern name))
+       (pcase-lambda ((map ,@args)) ,@body)
+       ,doc)))
+
 (defsubst repom--escape-query (&rest query)
   "Escape a search QUERY."
   (string-join (mapcar #'url-hexify-string

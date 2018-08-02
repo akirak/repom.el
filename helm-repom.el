@@ -95,21 +95,16 @@ are not truncated."
   (helm-make-actions
    "Browse the web page"
    (lambda (_cand)
-     (mapc (pcase-lambda ((map html_url))
-             (repom-github--browse-url html_url))
+     (mapc #'repom--api-github-repo-browse-html
            (helm-marked-candidates)))
    "Edit locally"
-   (pcase-lambda ((map clone_url name))
-     (repom-git-clone-for-editing clone_url name))
+   #'repom--api-github-repo-clone-and-edit
    "View locally"
-   (pcase-lambda ((map clone_url name))
-     (repom-git-clone-for-viewing clone_url name))
+   #'repom--api-github-repo-clone-and-view
    "Search code in the repository"
-   (pcase-lambda ((map full_name))
-     (repom-github--browse-repo-code-search full_name))
+   #'repom--api-github-repo-search-code
    "Search issues in the repository"
-   (pcase-lambda ((map full_name))
-     (repom-github--browse-repo-issues-search full_name)))
+   #'repom--api-github-repo-search-issues)
   "Alist of actions on a GitHub repository."
   :type '(alist :key-type string
                 :value-type function)

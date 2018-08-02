@@ -82,6 +82,26 @@ This should be a function that takes a URL as the argument."
 
 ;;;; Operations on a repository
 
+(repom--def-object-api github-repo-browse-html (html_url)
+  "Browse the HTML page of the repository."
+  (repom-github--browse-url html_url))
+
+(repom--def-object-api github-repo-clone-and-edit (clone_url name)
+  "Clone the repository and edit the copy."
+  (repom-git-clone-for-editing clone_url name))
+
+(repom--def-object-api github-repo-clone-and-view (clone_url name)
+  "Clone the repository and view the copy."
+  (repom-git-clone-for-viewing clone_url name))
+
+(repom--def-object-api github-repo-search-code (full_name)
+  "Search code in the repository."
+  (repom-github--browse-repo-code-search full_name))
+
+(repom--def-object-api github-repo-search-issues (full_name)
+  "Search issues in the repository."
+  (repom-github--browse-repo-issues-search full_name))
+
 (defun repom-github--browse-repo-code-search (repo &optional query)
   "Browse a search result page for code in REPO with QUERY."
   (let ((query (or query
