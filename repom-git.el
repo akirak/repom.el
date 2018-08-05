@@ -94,6 +94,8 @@ dirty
   untracked files.
 untracked
   untracked files in the repository.
+stash
+  Stashes in the repository.
 
 Optionally, FIELDS can be a single symbol, which is converted to
 a list containing the symbol.
@@ -133,7 +135,11 @@ the repository is not included in the result."
                        (dirty
                         (repom-git--count-status-lines field statuses))
                        (untracked
-                        (repom-git--count-status-lines field statuses)))
+                        (repom-git--count-status-lines field statuses))
+                       (stash
+                        (repom-git--count-status-lines
+                         field
+                         (repom-git--git-lines repo "stash" "list"))))
              when r
              collect (cons field r))))
 
@@ -144,7 +150,8 @@ the repository is not included in the result."
                 (lambda (s)
                   (cl-ecase type
                     (dirty (not (string-prefix-p "??" s)))
-                    (untracked (string-prefix-p "??" s))))
+                    (untracked (string-prefix-p "??" s))
+                    (stash lines)))
                 lines)))
     (length result)))
 
