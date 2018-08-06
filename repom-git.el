@@ -146,7 +146,7 @@ the repository is not included in the result."
                                         :details result)))
               ('untracked
                (when-let
-                   ((result (--filter (string-prefix-p "??" it) status)))
+                   ((result (--filter (string-prefix-p "??" it) statuses)))
                  (make-repom-git-status :summary (format "%d untracked files"
                                                          (length result))
                                         :count (length result)
