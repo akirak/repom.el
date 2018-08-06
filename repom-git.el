@@ -42,6 +42,8 @@
   :prefix "repom-git-"
   :group 'repom)
 
+(cl-defstruct repom-git-status summary count details)
+
 ;;;; Custom variables
 (defconst repom-git-default-description
   "Unnamed repository; edit this file 'description' to name the repository.")
@@ -130,20 +132,43 @@ the repository is not included in the result."
   (let ((statuses
          (when (-intersection fields '(dirty untracked))
            (repom-git--git-lines repo "status" "--porcelain"))))
-    (cl-loop for field in fields
-             for r = (pcase field
-                       ('dirty
-                        (--filter (not (string-prefix-p "??" it)) statuses))
-                       ('untracked
-                        (--filter (string-prefix-p "??" it) statuses))
-                       ('stash
-                        (repom-git--git-lines repo "stash" "list"))
-                       ('unmerged
-                        (repom-git--git-lines repo "branch" "--no-merged"))
-                       (`(unmerged ,ref)
-                        (repom-git--git-lines repo "branch" "--no-merged" ref)))
-             when r
-             collect (cons field r))))
+    (->> fields
+         (mapcar
+          (lambda (field)
+            (pcase field
+              ('dirty
+               (when-let
+                   ((result (--filter (not (string-prefix-p "??" it))
+                                      statuses)))
+                 (make-repom-git-status :summary (format "%d dirty files"
+                                                         (length result))
+                                        :count (length result)
+                                        :details result)))
+              ('untracked
+               (when-let
+                   ((result (--filter (string-prefix-p "??" it) status)))
+                 (make-repom-git-status :summary (format "%d untracked files"
+                                                         (length result))
+                                        :count (length result)
+                                        :details result)))
+              ('stash
+               (when-let
+                   ((result (repom-git--git-lines repo "stash" "list")))
+                 (make-repom-git-status :summary (format "%d stashes"
+                                                         (length result))
+                                        :count (length result)
+                                        :details result)))
+              ((or 'unmerged
+                   `(unmerged ,ref))
+               (when-let
+                   ((ref (or (bound-and-true-p ref) "HEAD"))
+                    (result (mapcar #'string-trim-left
+                                    (repom-git--git-lines repo "branch" "--no-merged" ref))))
+                 (make-repom-git-status :summary (format "The following branches are unmerged into %s: %s"
+                                                         ref (string-join result ", "))
+                                        :count (length result)
+                                        :details result))))))
+         (delq nil))))
 
 ;;;; Git utilities
 (defun repom-git--git-string (repo &rest args)
