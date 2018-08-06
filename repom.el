@@ -200,7 +200,11 @@ contain duplicates."
 
 ;;;; Utilities
 (defmacro repom--def-object-api (name args doc &rest body)
-  "Define a function to operate on an JSON object (or alist)."
+  "Define a function to operate on an JSON object (or alist).
+
+NAME is a suffix of the function, ARGS is a list of arguments (which
+is actually \"map\" arguments in `pcase', and DOC is a docstring.
+BODY is the body of the function."
   (declare (indent 2))
   (let ((name (concat "repom--api-" (symbol-name name))))
     `(defalias (quote ,(intern name))
