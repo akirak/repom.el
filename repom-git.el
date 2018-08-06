@@ -133,27 +133,13 @@ the repository is not included in the result."
     (cl-loop for field in fields
              for r = (cl-ecase field
                        (dirty
-                        (repom-git--count-status-lines field statuses))
+                        (--filter (not (string-prefix-p "??" it)) statuses))
                        (untracked
-                        (repom-git--count-status-lines field statuses))
+                        (--filter (string-prefix-p "??" it) statuses))
                        (stash
-                        (repom-git--count-status-lines
-                         field
-                         (repom-git--git-lines repo "stash" "list"))))
+                        (repom-git--git-lines repo "stash" "list")))
              when r
              collect (cons field r))))
-
-(defun repom-git--count-status-lines (type lines)
-  "Count the number of files in a TYPE state in LINES."
-  (when-let
-      ((result (cl-remove-if-not
-                (lambda (s)
-                  (cl-ecase type
-                    (dirty (not (string-prefix-p "??" s)))
-                    (untracked (string-prefix-p "??" s))
-                    (stash lines)))
-                lines)))
-    (length result)))
 
 ;;;; Git utilities
 (defun repom-git--git-string (repo &rest args)
