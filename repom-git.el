@@ -131,13 +131,17 @@ the repository is not included in the result."
          (when (-intersection fields '(dirty untracked))
            (repom-git--git-lines repo "status" "--porcelain"))))
     (cl-loop for field in fields
-             for r = (cl-ecase field
-                       (dirty
+             for r = (pcase field
+                       ('dirty
                         (--filter (not (string-prefix-p "??" it)) statuses))
-                       (untracked
+                       ('untracked
                         (--filter (string-prefix-p "??" it) statuses))
-                       (stash
-                        (repom-git--git-lines repo "stash" "list")))
+                       ('stash
+                        (repom-git--git-lines repo "stash" "list"))
+                       ('unmerged
+                        (repom-git--git-lines repo "branch" "--no-merged"))
+                       (`(unmerged ,ref)
+                        (repom-git--git-lines repo "branch" "--no-merged" ref)))
              when r
              collect (cons field r))))
 
