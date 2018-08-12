@@ -164,7 +164,7 @@ the repository is not included in the result."
                    ((ref (or (bound-and-true-p ref) "HEAD"))
                     (result (mapcar #'string-trim-left
                                     (repom-git--git-lines repo "branch" "--no-merged" ref))))
-                 (make-repom-git-status :summary (format "The following branches are unmerged into %s: %s"
+                 (make-repom-git-status :summary (format "Unmerged branches (%s): %s"
                                                          ref (string-join result ", "))
                                         :count (length result)
                                         :details result))))))
