@@ -202,6 +202,13 @@ against."
           (repom-git--git-lines repo "branch" "--no-merged"
                                 (or ref "HEAD"))))
 
+(cl-defsubst repom-git--clean-branch (s)
+  "Trim a prefix string from a branch entry.
+
+This function strip a prefix string of each line in the result of
+git-branch command."
+  (string-trim-left s "\*?[\t\n\r ]+"))
+
 (defun repom-git--unpushed-commits (repo &optional branch)
   "Count the number of unpushed commits.
 
