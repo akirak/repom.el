@@ -182,6 +182,7 @@ the repository is not included in the result."
                                           :details n))))))))
          (delq nil))))
 
+
 ;;;; Git utilities
 (defun repom-git--git-string (repo &rest args)
   "With REPO, run git with ARGS and return its output as a string."
@@ -193,6 +194,14 @@ the repository is not included in the result."
   (let ((default-directory repo))
     (apply #'magit-git-lines args)))
 
+(defun repom-git--run-git (repo &rest args)
+  "Run a Git command in a given repository.
+
+REPO is the path to the repository, and ARGS is a command line
+arguments passed to Git."
+  (let ((default-directory repo))
+    (magit-run-git args)))
+
 (defun repom-git--unmerged-branches (repo &optional ref)
   "List unmerged branches in a given repository.
 
@@ -202,12 +211,25 @@ against."
           (repom-git--git-lines repo "branch" "--no-merged"
                                 (or ref "HEAD"))))
 
+(defun repom-git--merged-branches (repo &optional ref)
+  "List merged branches in a given repository.
+
+REPO is the path to the repository, and REF is the branch to check
+against."
+  (mapcar #'repom-git--clean-branch
+          (repom-git--git-lines repo "branch" "--merged"
+                                (or ref "HEAD"))))
+
 (cl-defsubst repom-git--clean-branch (s)
   "Trim a prefix string from a branch entry.
 
 This function strip a prefix string of each line in the result of
 git-branch command."
   (string-trim-left s "\*?[\t\n\r ]+"))
+
+(defun repom-git--delete-branch (repo branch)
+  "Delete a branch in a Git repository."
+  (repom-git--run-git repo "branch" "-d" branch))
 
 (defun repom-git--unpushed-commits (repo &optional branch)
   "Count the number of unpushed commits.
