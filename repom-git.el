@@ -194,7 +194,11 @@ the repository is not included in the result."
     (apply #'magit-git-lines args)))
 
 (defun repom-git--unmerged-branches (repo &optional ref)
-  (mapcar #'string-trim-left
+  "List unmerged branches in a given repository.
+
+REPO is the path to the repository, and REF is the branch to check
+against."
+  (mapcar #'repom-git--clean-branch
           (repom-git--git-lines repo "branch" "--no-merged"
                                 (or ref "HEAD"))))
 
