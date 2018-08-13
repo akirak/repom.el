@@ -98,6 +98,10 @@ untracked
   untracked files in the repository.
 stash
   Stashes in the repository.
+unmerged <branch>
+  Unmerged branches.
+unpushed
+  The number of unpushed commits.
 
 Optionally, FIELDS can be a single symbol, which is converted to
 a list containing the symbol.
@@ -167,7 +171,17 @@ the repository is not included in the result."
                  (make-repom-git-status :summary (format "Unmerged branches (%s): %s"
                                                          ref (string-join result ", "))
                                         :count (length result)
-                                        :details result))))))
+                                        :details result)))
+              ('unpushed
+               ;; TODO: Allow specifying a branch
+               (let ((n (repom-git--unpushed-commits repo)))
+                 (cond
+                  ((null n)
+                   (make-repom-git-status :summary "No push remote"))
+                  ((> n 0)
+                   (make-repom-git-status :summary (format "Unpushed commits: %d" n)
+                                          :count n
+                                          :details n))))))))
          (delq nil))))
 
 ;;;; Git utilities
@@ -180,6 +194,17 @@ the repository is not included in the result."
   "With REPO, run git with ARGS and return its output as strings."
   (let ((default-directory repo))
     (apply #'magit-git-lines args)))
+
+(defun repom-git--unpushed-commits (repo &optional branch)
+  "Count the number of unpushed commits.
+
+This function counts the number of unpushed commits in REPO.
+If BRANCH is non-nil, compare the branch with its push branch.
+
+If the branch doesn't have a push remote, it returns nil."
+  (let ((default-directory repo))
+    (when-let ((remote (magit-get-push-branch branch t)))
+      (nth 1 (magit-rev-diff-count (or branch "HEAD") remote)))))
 
 (provide 'repom-git)
 ;;; repom-git.el ends here
