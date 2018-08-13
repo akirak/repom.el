@@ -164,10 +164,8 @@ the repository is not included in the result."
                                         :details result)))
               ((or 'unmerged
                    `(unmerged ,ref))
-               (when-let
-                   ((ref (or (bound-and-true-p ref) "HEAD"))
-                    (result (mapcar #'string-trim-left
-                                    (repom-git--git-lines repo "branch" "--no-merged" ref))))
+               (when-let ((ref (or (bound-and-true-p ref) "HEAD"))
+                          (result (repom-git--unmerged-branches repo ref)))
                  (make-repom-git-status :summary (format "Unmerged branches (%s): %s"
                                                          ref (string-join result ", "))
                                         :count (length result)
@@ -194,6 +192,11 @@ the repository is not included in the result."
   "With REPO, run git with ARGS and return its output as strings."
   (let ((default-directory repo))
     (apply #'magit-git-lines args)))
+
+(defun repom-git--unmerged-branches (repo &optional ref)
+  (mapcar #'string-trim-left
+          (repom-git--git-lines repo "branch" "--no-merged"
+                                (or ref "HEAD"))))
 
 (defun repom-git--unpushed-commits (repo &optional branch)
   "Count the number of unpushed commits.
