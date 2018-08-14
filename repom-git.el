@@ -228,7 +228,10 @@ git-branch command."
   (string-trim-left s "\*?[\t\n\r ]+"))
 
 (defun repom-git--delete-branch (repo branch)
-  "Delete a branch in a Git repository."
+  "Delete a branch in a Git repository.
+
+REPO is the repository containing the branch, and BRANCH is the branch
+to delete."
   (repom-git--run-git repo "branch" "-d" branch))
 
 (defun repom-git--unpushed-commits (repo &optional branch)
