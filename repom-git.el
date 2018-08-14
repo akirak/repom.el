@@ -243,7 +243,7 @@ If BRANCH is non-nil, compare the branch with its push branch.
 If the branch doesn't have a push remote, it returns nil."
   (let ((default-directory repo))
     (when-let ((remote (magit-get-push-branch branch t)))
-      (nth 1 (magit-rev-diff-count (or branch "HEAD") remote)))))
+      (car (magit-rev-diff-count (or branch "HEAD") remote)))))
 
 (provide 'repom-git)
 ;;; repom-git.el ends here
