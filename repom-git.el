@@ -4,7 +4,7 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 1.0-pre
-;; Package-Requires: ((emacs "25.1") (f "0.19") (magit "2.12") (dash "2.10"))
+;; Package-Requires: ((emacs "25.1") (f "0.19") (magit "2.12") (dash "2.10") (tablist "0.70"))
 ;; Keywords: vc
 ;; URL: https://github.com/akirak/repom.el
 
@@ -36,6 +36,7 @@
 (require 'f)
 (require 'magit)
 (require 'dash)
+(require 'tablist)
 
 (defgroup repom-git nil
   "Git"
@@ -182,6 +183,111 @@ the repository is not included in the result."
                                           :details n))))))))
          (delq nil))))
 
+;;;; Branch list interfaces
+
+(define-derived-mode repom-git-branch-list-mode tabulated-list-mode
+  "Git Branches"
+  "Major mode for displaying branches in local Git repositories."
+  (tabulated-list-init-header)
+  (tablist-minor-mode 1))
+
+(defvar repom-git-branch-list-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [?\s] 'repom-git-branch-list--show)
+    (define-key map "k" nil)
+    (define-key map "D" 'repom-git-branch-list--delete)
+    map))
+
+(defun repom-git-branch-list--show ()
+  "Show a selected branch."
+  (interactive)
+  (let ((orig-window (selected-window)))
+    (repom-git-branch-list--view)
+    (select-window orig-window)))
+
+(defun repom-git-branch-list--view ()
+  "Show a selected branch."
+  (interactive)
+  (repom-git-branch-list--with-selected
+      (lambda (branch)
+        (magit-log (list branch) '("--graph" "--decorate")))))
+
+(defun repom-git-branch-list--parse-id (id)
+  (split-string (symbol-name id) "@"))
+
+(defun repom-git-branch-list--with-selected (func)
+  "Call FUNC with the selected branch as the argument."
+  (declare (indent 1))
+  (when-let ((id (tabulated-list-get-id)))
+    (-let (((repo branch) (repom-git-branch-list--parse-id id)))
+      (let ((default-directory repo))
+        (funcall func branch)))))
+
+(defun repom-git-branch-list--delete ()
+  "Delete selected branches."
+  (interactive)
+  (let ((branches (--map (repom-git-branch-list--parse-id (car it))
+                         (tablist-get-marked-items))))
+    (when (yes-or-no-p (format "Delete the following %d branches?\n%s"
+                               (length branches)
+                               (mapconcat (lambda (cells)
+                                            (format "%-30s:%s"
+                                                    (abbreviate-file-name (car cells))
+                                                    (nth 1 cells)))
+                                          branches "\n")))
+      (cl-loop for (repo branch) in branches
+               do (repom-git--delete-branch repo branch))
+      (tablist-do-kill-lines))))
+
+(defcustom repom-git-deletable-branch-list-exclude-master t
+  "Exclude master branches in `repom-git-deletable-branch-list'.
+
+If this option is non-nil, \"master\" branches are excluded from the
+items in `repom-git-deletable-branch-list' command."
+  :group 'repom-git
+  :type 'boolean)
+
+;;;###autoload
+(defun repom-git-deletable-branch-list ()
+  "Display a table of deletable branches."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Deletable Git Branches*")
+    (let ((inhibit-read-only t))
+      (erase-buffer))
+    (setq tabulated-list-format [("Group" 10 t)
+                                 ("Repository" 20 t)
+                                 ("Branch" 15 t)
+                                 ("Status" 7 t)
+                                 ("Destination" 15 t)
+                                 ("Last commit" 20 t)]
+          tabulated-list-padding 1)
+    (repom-git-branch-list-mode)
+    (add-hook 'tabulated-list-revert-hook
+              #'repom-git-deletable-branch-list--get nil t)
+    (tablist-revert)
+    (pop-to-buffer-same-window (current-buffer))))
+
+(defun repom-git-deletable-branch-list--get ()
+  "Get a list of deletable branches in all repositories."
+  (setq tabulated-list-entries
+        (cl-loop for (repo branch) in (repom-git--all-repo-branches
+                                       :exclude-head t)
+                 unless (and repom-git-deletable-branch-list-exclude-master
+                             (equal branch "master"))
+                 for state = (repom-git--branch-deletable repo branch)
+                 when state
+                 collect (list (intern (concat repo "@" branch))
+                               (vector (or (repom-identify-local-group repo)
+                                           (abbreviate-file-name (f-parent repo)))
+                                       (file-name-nondirectory
+                                        (string-remove-suffix "/" repo))
+                                       branch
+                                       (car state)
+                                       (cdr state)
+                                       (car (repom-git--git-lines repo
+                                                                  "show"
+                                                                  "--pretty=tformat:%cr"
+                                                                  branch)))))))
 
 ;;;; Git utilities
 (defun repom-git--git-string (repo &rest args)
@@ -202,6 +308,31 @@ arguments passed to Git."
   (let ((default-directory repo))
     (magit-run-git args)))
 
+(defun repom-git--head-branch (repo)
+  "Get the head branch of REPO."
+  (repom-git--git-string repo "symbolic-ref" "--short" "HEAD"))
+
+(cl-defun repom-git--all-repo-branches (&key exclude-head
+                                             include-detached-head)
+  "Return all branches in all local repositories.
+
+The result is a list of (REPO BRANCH)."
+  (-flatten-n
+   1 (mapcar
+      (lambda (repo)
+        (let ((head (repom-git--head-branch repo)))
+          (cl-loop for branch in (repom-git--branches repo)
+                   unless (and exclude-head (equal head branch))
+                   unless (and (string-prefix-p "(HEAD detached from " branch)
+                               (not include-detached-head))
+                   collect (list repo branch))))
+      (repom-discover-local-git-repos))))
+
+(defun repom-git--branches (repo)
+  "List branches in a given repository REPO."
+  (mapcar #'repom-git--clean-branch
+          (repom-git--git-lines repo "branch")))
+
 (defun repom-git--unmerged-branches (repo &optional ref)
   "List unmerged branches in a given repository.
 
@@ -220,11 +351,18 @@ against."
           (repom-git--git-lines repo "branch" "--merged"
                                 (or ref "HEAD"))))
 
+(defun repom-git--rev-merged (repo rev)
+  "Test if a revision/branch is merged into HEAD.
+
+REPO is the repository, and REV is a revision (usually a branch)."
+  (let ((default-directory repo))
+    (= 0 (car (magit-rev-diff-count rev "HEAD")))))
+
 (defun repom-git--clean-branch (s)
-  "Trim a prefix string from a branch entry.
+  "Trim a prefix string from a branch entry S.
 
 This function strip a prefix string of each line in the result of
-git-branch command."
+\"git-branch\" command."
   (string-trim-left s "\*?[\t\n\r ]+"))
 
 (defun repom-git--delete-branch (repo branch)
@@ -234,15 +372,37 @@ REPO is the repository containing the branch, and BRANCH is the branch
 to delete."
   (repom-git--run-git repo "branch" "-d" branch))
 
-(defun repom-git--unpushed-commits (repo &optional branch)
+(defun repom-git--branch-deletable (repo branch)
+  "Check if a branch if deletable.
+
+This function returns non-nil if a branch in a repository is deletable.
+REPO is the repository, and BRANCH is the branch.
+The actual result is a cons cell if the repository is deletable.
+The first item is a string indicating the status, and the second item
+is either a remote branch or a local branch."
+  (let ((default-directory repo)
+        upstream)
+    (cond
+     ((setq upstream (magit-get-upstream-branch branch t))
+      (when (= 0 (car (magit-rev-diff-count branch upstream)))
+        (cons "Pushed" upstream)))
+     ((repom-git--rev-merged repo branch)
+      (cons "Merged" (repom-git--head-branch repo))))))
+
+(defun repom-git--unpushed-commits (repo &optional branch use-upstream)
   "Count the number of unpushed commits.
 
 This function counts the number of unpushed commits in REPO.
 If BRANCH is non-nil, compare the branch with its push branch.
 
+If USE-UPSTREAM is non-nil, compare the branch with its upstream
+branch rather than the push remote.
+
 If the branch doesn't have a push remote, it returns nil."
   (let ((default-directory repo))
-    (when-let ((remote (magit-get-push-branch branch t)))
+    (when-let ((remote (if use-upstream
+                           (magit-get-upstream-branch branch t)
+                         (magit-get-push-branch branch t))))
       (car (magit-rev-diff-count (or branch "HEAD") remote)))))
 
 (provide 'repom-git)
