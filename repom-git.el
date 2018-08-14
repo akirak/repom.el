@@ -220,7 +220,7 @@ against."
           (repom-git--git-lines repo "branch" "--merged"
                                 (or ref "HEAD"))))
 
-(cl-defsubst repom-git--clean-branch (s)
+(defun repom-git--clean-branch (s)
   "Trim a prefix string from a branch entry.
 
 This function strip a prefix string of each line in the result of
