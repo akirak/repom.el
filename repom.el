@@ -65,7 +65,10 @@
   "List of extra local repository locations."
   :type '(repeat (list (string :tag "Directory")
                        (integer :tag "Level")
-                       (plist :tag "Options" :inline t)))
+                       (plist :tag "Options" :inline t
+                              :options
+                              (((const :tag "Name to display in tables" :name)
+                                string)))))
   :group 'repom-local)
 
 (defcustom repom-edit-project-command
@@ -197,6 +200,19 @@ contain duplicates."
     (iter-do (dir (repom--yield-git-work-trees))
       (push dir result))
     result))
+
+(defun repom-identify-local-group (repo)
+  "Identify a group REPO belongs to.
+
+This function finds a group of a repository as configured in
+`repom-local-discovery-locations'.  If the group has :name option set,
+this function returns the name."
+  (setq repo (expand-file-name repo))
+  (cl-loop for (root level . options) in repom-local-discovery-locations
+           for root = (file-name-as-directory (expand-file-name root))
+           when (string-prefix-p root repo)
+           when (eq level (length (f-split (f-relative repo root))))
+           return (or (plist-get options :name) root)))
 
 ;;;; Utilities
 (defmacro repom--def-object-api (name args doc &rest body)
