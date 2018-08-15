@@ -222,6 +222,7 @@ the repository is not included in the result."
         (magit-status))))
 
 (defun repom-git-branch-list--parse-id (id)
+  "Parse the ID of an item in a branch list."
   (split-string (symbol-name id) "@"))
 
 (defun repom-git-branch-list--with-selected (func)
