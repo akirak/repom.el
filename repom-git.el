@@ -284,10 +284,52 @@ items in `repom-git-deletable-branch-list' command."
                                        branch
                                        (car state)
                                        (cdr state)
-                                       (car (repom-git--git-lines repo
-                                                                  "show"
-                                                                  "--pretty=tformat:%cr"
-                                                                  branch)))))))
+                                       (repom-git--last-commit-relative-date repo branch))))))
+
+;;;###autoload
+(defun repom-git-unpushed-branch-list ()
+  "Display a table of deletable branches."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Unpushed Git Branches*")
+    (let ((inhibit-read-only t))
+      (erase-buffer))
+    (setq tabulated-list-format [("Group" 10 t)
+                                 ("Repository" 20 t)
+                                 ("Branch" 15 t)
+                                 ("Upstream" 15 t)
+                                 ("Diff(A/B)" 8 t)
+                                 ("Last commit" 20 t)]
+          tabulated-list-padding 1)
+    (repom-git-branch-list-mode)
+    (add-hook 'tabulated-list-revert-hook
+              #'repom-git-unpushed-branch-list--get nil t)
+    (tablist-revert)
+    (pop-to-buffer-same-window (current-buffer))))
+
+(defun repom-git-unpushed-branch-list--get ()
+  "Get a list of deletable branches in all repositories."
+  (setq tabulated-list-entries
+        (cl-loop for (repo branch) in (repom-git--all-repo-branches
+                                       :exclude-head t)
+                 for upstream = (repom-git--upstream-branch repo branch)
+                 for upstream-diff = (when upstream
+                                       (repom-git--compare-revs repo branch upstream))
+                 ;; Skip if the branch doesn't have an upstream and it has been merged
+                 unless (and (null upstream)
+                             (repom-git--rev-merged repo branch))
+                 unless (and upstream
+                             (= 0 (car upstream-diff)))
+                 collect (list (intern (concat repo "@" branch))
+                               (vector (or (repom-identify-local-group repo)
+                                           (abbreviate-file-name (f-parent repo)))
+                                       (file-name-nondirectory
+                                        (string-remove-suffix "/" repo))
+                                       branch
+                                       (or upstream "-")
+                                       (if upstream
+                                           (repom-git--show-diff-counts upstream-diff)
+                                         "-")
+                                       (repom-git--last-commit-relative-date repo branch))))))
 
 ;;;; Git utilities
 (defun repom-git--git-string (repo &rest args)
@@ -311,6 +353,22 @@ arguments passed to Git."
 (defun repom-git--head-branch (repo)
   "Get the head branch of REPO."
   (repom-git--git-string repo "symbolic-ref" "--short" "HEAD"))
+
+(defun repom-git--upstream-branch (repo &optional branch)
+  "Get an upstream branch of a branch in a repository.
+
+REPO is the repository, and BRANCH is the branch."
+  (let ((default-directory repo))
+    (magit-get-upstream-branch branch t)))
+
+(defun repom-git--last-commit-relative-date (repo branch)
+  "Return the relative date of the last commit of a branch.
+
+REPO is the repository, and BRANCH is the branch."
+  (car (repom-git--git-lines repo
+                             "show"
+                             "--pretty=tformat:%cr"
+                             branch)))
 
 (cl-defun repom-git--all-repo-branches (&key exclude-head
                                              include-detached-head)
@@ -351,6 +409,21 @@ against."
           (repom-git--git-lines repo "branch" "--merged"
                                 (or ref "HEAD"))))
 
+(defun repom-git--compare-revs (repo r1 r2)
+  "Compare two revision in a repository.
+
+REPO is the repository, and R1 and R2 are revisions (usuallly
+branches).
+The result is a list."
+  (let ((default-directory repo))
+    (magit-rev-diff-count r1 r2)))
+
+(defun repom-git--show-diff-counts (r)
+  "Format a result of `repom-git--compare-revs'.
+
+R is a list returned from `repom-git--compare-revs'."
+  (apply #'format "+%d/-%d" r))
+
 (defun repom-git--rev-merged (repo rev)
   "Test if a revision/branch is merged into HEAD.
 
@@ -389,7 +462,8 @@ is either a remote branch or a local branch."
      ((repom-git--rev-merged repo branch)
       (cons "Merged" (repom-git--head-branch repo))))))
 
-(defun repom-git--unpushed-commits (repo &optional branch use-upstream)
+(cl-defun repom-git--unpushed-commits (repo &optional branch use-upstream
+                                            &key include-name)
   "Count the number of unpushed commits.
 
 This function counts the number of unpushed commits in REPO.
@@ -398,12 +472,18 @@ If BRANCH is non-nil, compare the branch with its push branch.
 If USE-UPSTREAM is non-nil, compare the branch with its upstream
 branch rather than the push remote.
 
+If INCLUDE-NAME is non-nil, return (REMOTE . NUMBER) where REMOTE
+is the name of an upstream/push branch.
+
 If the branch doesn't have a push remote, it returns nil."
   (let ((default-directory repo))
     (when-let ((remote (if use-upstream
                            (magit-get-upstream-branch branch t)
-                         (magit-get-push-branch branch t))))
-      (car (magit-rev-diff-count (or branch "HEAD") remote)))))
+                         (magit-get-push-branch branch t)))
+               (n (car (magit-rev-diff-count (or branch "HEAD") remote))))
+      (if include-name
+          (cons remote n)
+        n))))
 
 (provide 'repom-git)
 ;;; repom-git.el ends here
