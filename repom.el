@@ -209,8 +209,9 @@ This function finds a group of a repository as configured in
 this function returns the name."
   (setq repo (expand-file-name repo))
   (cl-loop for (root level . options) in repom-local-discovery-locations
-           for root = (file-name-as-directory (expand-file-name root))
-           when (string-prefix-p root repo)
+           when (string-prefix-p (setq root (file-name-as-directory
+                                             (expand-file-name root)))
+                                 repo)
            when (eq level (length (f-split (f-relative repo root))))
            return (or (plist-get options :name) root)))
 

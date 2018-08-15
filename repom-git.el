@@ -219,7 +219,7 @@ the repository is not included in the result."
   (repom-git-branch-list--with-selected
       (lambda (branch)
         (magit-checkout branch)
-        (magit-status))))
+        (call-interactively #'magit-status))))
 
 (defun repom-git-branch-list--parse-id (id)
   "Parse the ID of an item in a branch list."
@@ -446,7 +446,7 @@ REPO is the repository, and REV is a revision (usually a branch)."
 
 This function strip a prefix string of each line in the result of
 \"git-branch\" command."
-  (string-trim-left s "\*?[\t\n\r ]+"))
+  (string-trim-left (string-remove-prefix "*" s)))
 
 (defun repom-git--delete-branch (repo branch)
   "Delete a branch in a Git repository.
