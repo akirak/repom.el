@@ -195,6 +195,7 @@ the repository is not included in the result."
   (let ((map (make-sparse-keymap)))
     (define-key map [?\s] 'repom-git-branch-list--show)
     (define-key map "k" nil)
+    (define-key map "C" 'repom-git-branch-list--checkout)
     (define-key map "D" 'repom-git-branch-list--delete)
     map))
 
@@ -211,6 +212,14 @@ the repository is not included in the result."
   (repom-git-branch-list--with-selected
       (lambda (branch)
         (magit-log (list branch) '("--graph" "--decorate")))))
+
+(defun repom-git-branch-list--checkout ()
+  "Check out a branch under the cursor and open `magit-status'."
+  (interactive)
+  (repom-git-branch-list--with-selected
+      (lambda (branch)
+        (magit-checkout branch)
+        (magit-status))))
 
 (defun repom-git-branch-list--parse-id (id)
   (split-string (symbol-name id) "@"))
