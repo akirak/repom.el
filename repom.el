@@ -141,9 +141,15 @@ directory"
 (defun repom--local-discovery-locations ()
   "Return a list of local discovery locations, including clone destinations."
   (append repom-local-discovery-locations
-          ;; FIXME: Avoid duplicates
-          `((,repom-clone-destination-for-viewing 1)
-            (,repom-clone-destination-for-editing 1))))
+          ;; Append the clone destinations
+          (mapcar (lambda (path) (list path 1))
+                  ;; Check if the paths are not included in the configured locations
+                  (cl-remove-if
+                   (lambda (path)
+                     (eql 1 (cadr (cl-assoc path repom-local-discovery-locations
+                                            :test #'f-same-p))))
+                   (list repom-clone-destination-for-viewing
+                         repom-clone-destination-for-editing)))))
 
 (iter-defun repom--yield-projectile-projects ()
   "Generates known projectile projects in canonical paths."
