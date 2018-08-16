@@ -68,6 +68,8 @@
                        (plist :tag "Options" :inline t
                               :options
                               (((const :tag "Name to display in tables" :name)
+                                string)
+                               ((const :tag "Regexp pattern to match against tails" :pattern)
                                 string)))))
   :group 'repom-local)
 
@@ -161,16 +163,21 @@ directory"
     (when (f-directory-p item)
       (iter-yield item))))
 
-(iter-defun repom--yield-directories-at-level (root level)
-  "Generates directories inside ROOT at LEVEL."
-  (if (= level 0)
-      (when (f-directory-p root)
-        (iter-yield (f-slash root)))
-    (dolist (subdir (f-directories root))
-      (if (= level 1)
-          (iter-yield (f-slash subdir))
-        (iter-yield-from (repom--yield-directories-at-level subdir
-                                                            (1- level)))))))
+(iter-defun repom--yield-directories-at-level (root level &optional predicate)
+  "Generate directories at a given level inside a root directory.
+
+ROOT is the root directory, LEVEL is the nesting level, and
+PREDICATE is a function to test against the file name
+without directory."
+  (pcase level
+    (0 (when (f-directory-p root)
+         (iter-yield (f-slash root))))
+    (1 (dolist (subdir (f-directories root predicate))
+         (iter-yield (f-slash subdir))))
+    (_ (dolist (subdir (f-directories root))
+         (iter-yield-from (repom--yield-directories-at-level subdir
+                                                             (1- level)
+                                                             predicate))))))
 
 (iter-defun repom--yield-directories ()
   "Generates local Git repositories."
@@ -178,9 +185,13 @@ directory"
     (iter-do (dir (repom--yield-projectile-projects))
       (push dir sent)
       (iter-yield dir))
-    (cl-loop for (root level . _) in (repom--local-discovery-locations)
-             do (iter-do (dir (repom--yield-directories-at-level (f-canonical root)
-                                                                 level))
+    (cl-loop for (root level . options) in (repom--local-discovery-locations)
+             do (iter-do (dir (repom--yield-directories-at-level
+                               (f-canonical root)
+                               level
+                               (when-let ((pattern (plist-get options :pattern)))
+                                 `(lambda (path)
+                                    (string-match ,pattern (f-filename path))))))
                   (unless (member root sent)
                     (iter-yield dir))))))
 
