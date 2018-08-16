@@ -181,7 +181,7 @@ directory"
     (cl-loop for (root level . _) in (repom--local-discovery-locations)
              do (iter-do (dir (repom--yield-directories-at-level (f-canonical root)
                                                                  level))
-                  (unless (not (member root sent))
+                  (unless (member root sent)
                     (iter-yield dir))))))
 
 (iter-defun repom--yield-git-work-trees ()
