@@ -298,7 +298,7 @@ items in `repom-git-deletable-branch-list' command."
 
 ;;;###autoload
 (defun repom-git-unpushed-branch-list ()
-  "Display a table of deletable branches."
+  "Display a table of unpushed branches."
   (interactive)
   (with-current-buffer (get-buffer-create "*Unpushed Git Branches*")
     (let ((inhibit-read-only t))
