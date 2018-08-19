@@ -230,7 +230,8 @@ this function returns the name."
                                              (expand-file-name root)))
                                  repo)
            when (eq level (length (f-split (f-relative repo root))))
-           return (or (plist-get options :name) root)))
+           return (or (plist-get options :name)
+                      (abbreviate-file-name root))))
 
 ;;;; Utilities
 (defmacro repom--def-object-api (name args doc &rest body)
